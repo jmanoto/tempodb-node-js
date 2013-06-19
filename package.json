@@ -3,8 +3,13 @@
   "description": "A Node.js client for TempoDB",
   "version": "0.3.4",
   "author": "Andrew J Cronk <andy@tempo-db.com>",
-  "keywords": ["tempodb", "time-series", "database"],
-  "main": "tempodb"
+  "keywords": [
+    "tempodb",
+    "time-series",
+    "database"
+  ],
+  "main": "tempodb",
+  "dependencies": {
+    "request": "~2.21.0"
+  }
 }
-
-

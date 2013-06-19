@@ -1,6 +1,5 @@
-var http = require('http');
-var https = require('https');
-var zlib = require('zlib');
+var url = require('url');
+var request = require('request');
 var ID = 'TempoDB: ';
 
 var TempoDBClient = exports.TempoDBClient =
@@ -15,89 +14,38 @@ var TempoDBClient = exports.TempoDBClient =
         options = options || {};
 
         const HOST = 'api.tempo-db.com',
-              PORT = 443,
               VERSION = 'v1',
               SECURE = true;
 
         var hostname = options.hostname || HOST;
         var auth = 'Basic ' + new Buffer(key+':'+secret).toString('base64');
         var headers = {
-                'Host': hostname,
-                'Authorization': auth,
-                'User-Agent': "tempodb-nodejs/0.2.1",
-                'Accept-Encoding': 'gzip',
-                'Connection': 'keep-alive'
+            'Host': hostname,
+            'Authorization': auth,
+            'User-Agent': "tempodb-nodejs/0.2.1"
         };
 
         this.key = key;
         this.secret = secret;
+
         this.hostname = hostname;
-        this.port = options.port || PORT;
-        this.connection = (options.secure != false) && SECURE ? https : http; // Have to check if boolean is false and not just undefined
+        this.protocol = (options.secure != false) && SECURE ? 'https' : 'http'; // Have to check if boolean is false and not just undefined
         this.version = options.version || VERSION;
         this.path = '/' + this.version;
         this.headers = headers;
+        this.baseUrl = this.protocol + '://' + this.hostname + '/' + this.version;
     }
 
-TempoDBClient.prototype.call = function(method, path, body, callback) {
-    var json_body = '';
-    if (body) {
-        json_body = JSON.stringify(body);
-        this.headers['Content-Length'] = json_body.length;
-    }
-    else {
-      this.headers['Content-Length'] = 0
-    }
+TempoDBClient.prototype._callApi = function(method, path, body, callback) {
 
     var options = {
-        host: this.hostname,
-        port: this.port,
-        path: this.path+path || this.path,
+        url:  url.parse(this.baseUrl + path || this.baseUrl),
         method: method,
-        headers: this.headers
+        headers: this.headers,
+        body: JSON.stringify(body)
     };
 
-    var req = this.connection.request(options, function (res) {
-        var data = '';
-        var response = res.statusCode;
-
-        if(res.headers['content-encoding'] == 'gzip') {
-          res = res.pipe(zlib.createGunzip());
-        }
-
-        //the listener that handles the response chunks
-        res.addListener('data', function (chunk) {
-            data += chunk.toString();
-        });
-
-        res.addListener('end', function() {
-            var result = '';
-            if (data) {
-                if (response < 300) {
-                    result = JSON.parse(data);
-                }
-                else {
-                    result = data;
-                }
-            }
-
-            if (typeof callback != 'undefined') {
-                callback({
-                    response: response,
-                    body: result
-                });
-            }
-        });
-    });
-
-    req.on('error', function (error) {
-        callback(null, error);
-    });
-
-    if (body) {
-        req.write(json_body);
-    }
-    req.end();
+    request(options, callback);
 }
 
 TempoDBClient.prototype.create_series = function(key, callback) {
@@ -107,7 +55,7 @@ TempoDBClient.prototype.create_series = function(key, callback) {
         data.key = key;
     }
 
-    return this.call('POST', '/series/', data, callback);
+    return this._callApi('POST', '/series/', data, callback);
 }
 
 TempoDBClient.prototype.get_series = function(options, callback) {
@@ -122,7 +70,7 @@ TempoDBClient.prototype.get_series = function(options, callback) {
     options = options || {};
     var query_string = '?' + EncodeQueryData(options);
 
-    return this.call('GET', '/series/' + query_string, null, callback);
+    return this._callApi('GET', '/series/' + query_string, null, callback);
 }
 
 TempoDBClient.prototype.update_series = function(series_id, series_key, name, attributes, tags, callback) {
@@ -142,7 +90,7 @@ TempoDBClient.prototype.update_series = function(series_id, series_key, name, at
         tags: tags
     }
 
-    return this.call('PUT', '/series/id/' + series_id + '/', data, callback);
+    return this._callApi('PUT', '/series/id/' + series_id + '/', data, callback);
 }
 
 TempoDBClient.prototype.read = function(start, end, options, callback) {
@@ -159,7 +107,7 @@ TempoDBClient.prototype.read = function(start, end, options, callback) {
     options.end = ISODateString(end);
     var query_string = '?' + EncodeQueryData(options);
 
-    return this.call('GET', '/data/' + query_string, null, callback);
+    return this._callApi('GET', '/data/' + query_string, null, callback);
 };
 
 TempoDBClient.prototype.read_id = function(series_id, start, end, options, callback) {
@@ -174,7 +122,7 @@ TempoDBClient.prototype.read_id = function(series_id, start, end, options, callb
     options.end = ISODateString(end);
     var query_string = '?' + EncodeQueryData(options);
 
-    return this.call('GET', '/series/id/' + series_id + '/data/' + query_string, null, callback);
+    return this._callApi('GET', '/series/id/' + series_id + '/data/' + query_string, null, callback);
 }
 
 TempoDBClient.prototype.read_key = function(series_key, start, end, options, callback) {
@@ -189,15 +137,15 @@ TempoDBClient.prototype.read_key = function(series_key, start, end, options, cal
     options.end = ISODateString(end);
     var query_string = '?' + EncodeQueryData(options);
 
-    return this.call('GET', '/series/key/' + series_key + '/data/' + query_string, null, callback);
+    return this._callApi('GET', '/series/key/' + series_key + '/data/' + query_string, null, callback);
 }
 
 TempoDBClient.prototype.write_id = function(series_id, data, callback) {
-    return this.call('POST', '/series/id/' + series_id + '/data/', data, callback);
+    return this._callApi('POST', '/series/id/' + series_id + '/data/', data, callback);
 }
 
 TempoDBClient.prototype.write_key = function(series_key, data, callback) {
-    return this.call('POST', '/series/key/' + series_key + '/data/', data, callback);
+    return this._callApi('POST', '/series/key/' + series_key + '/data/', data, callback);
 }
 
 TempoDBClient.prototype.write_bulk = function(ts, data, callback) {
@@ -206,15 +154,15 @@ TempoDBClient.prototype.write_bulk = function(ts, data, callback) {
         data: data
     }
 
-    return this.call('POST', '/data/', body, callback);
+    return this._callApi('POST', '/data/', body, callback);
 }
 
 TempoDBClient.prototype.increment_id = function(series_id, data, callback) {
-    return this.call('POST', '/series/id/' + series_id + '/increment/', data, callback);
+    return this._callApi('POST', '/series/id/' + series_id + '/increment/', data, callback);
 }
 
 TempoDBClient.prototype.increment_key = function(series_key, data, callback) {
-    return this.call('POST', '/series/key/' + series_key + '/increment/', data, callback);
+    return this._callApi('POST', '/series/key/' + series_key + '/increment/', data, callback);
 }
 
 TempoDBClient.prototype.increment_bulk = function(ts, data, callback) {
@@ -223,7 +171,7 @@ TempoDBClient.prototype.increment_bulk = function(ts, data, callback) {
         data: data
     }
 
-    return this.call('POST', '/increment/', body, callback);
+    return this._callApi('POST', '/increment/', body, callback);
 }
 
 TempoDBClient.prototype.delete_id = function(series_id, start, end, callback) {
@@ -233,7 +181,7 @@ TempoDBClient.prototype.delete_id = function(series_id, start, end, callback) {
   }
   var query_string = '?' + EncodeQueryData(options);
 
-  return this.call('DELETE', '/series/id/'+series_id+'/data/'+query_string, null, callback);
+  return this._callApi('DELETE', '/series/id/'+series_id+'/data/'+query_string, null, callback);
 }
 
 TempoDBClient.prototype.delete_key = function(series_key, start, end, callback) {
@@ -244,7 +192,7 @@ TempoDBClient.prototype.delete_key = function(series_key, start, end, callback) 
 
   var query_string = '?' + EncodeQueryData(options);
 
-  return this.call('DELETE', '/series/key/'+series_key+'/data/'+query_string, null, callback);
+  return this._callApi('DELETE', '/series/key/'+series_key+'/data/'+query_string, null, callback);
 }
 
 
@@ -282,10 +230,15 @@ var ISODateString = function(d) {
         return n<10 ? '0' + n : n;
     }
 
-    return d.getUTCFullYear() + '-' +
-        pad(d.getUTCMonth() + 1) + '-' +
-        pad(d.getUTCDate()) + 'T' +
-        pad(d.getUTCHours()) + ':' +
-        pad(d.getUTCMinutes()) + ':' +
-        pad(d.getUTCSeconds()) + 'Z';
+/*
+    console.log('ISODateString', d.getUTCFullYear() + '-' +
+      pad(d.getUTCMonth() + 1) + '-' +
+      pad(d.getUTCDate()) + 'T' +
+      pad(d.getUTCHours()) + ':' +
+      pad(d.getUTCMinutes()) + ':' +
+      pad(d.getUTCSeconds()) + 'Z');
+    console.log('ISODateString', d.toISOString());
+*/
+
+    return d.toISOString();
 };

@@ -1,7 +1,8 @@
 /* http://tempo-db.com/api/write-series/#write-series-by-key */
 
-var TempoDBClient = require('tempodb').TempoDBClient;
+var TempoDBClient = require('../tempodb').TempoDBClient;
 var tempodb = new TempoDBClient('your-api-key', 'your-api-secret');
+var util = require('util');
 
 const MINUTES_IN_DAY = 1440;
 const MS_IN_DAY = 86400000;
@@ -22,12 +23,8 @@ for (var day = 0; day < 10; day++) {
 
     console.log(day, data[0]);
 
-    tempodb.write_key(series_key, data, function(result){
-        var out = result.response;
-        if (result.body) {
-            out += ': ' + JSON.stringify(result.body);
-        }
-        console.log(out+'\n');
+    tempodb.write_key(series_key, data, function(err, result){
+      console.log(result.statusCode + ': ' + result.body);
     });
 
     //bump by 1 day
