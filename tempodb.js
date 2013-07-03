@@ -22,7 +22,7 @@ var TempoDBClient = exports.TempoDBClient =
         var headers = {
             'Host': hostname,
             'Authorization': auth,
-            'User-Agent': "tempodb-nodejs/0.2.1"
+            'User-Agent': "tempodb-nodejs/0.2.1_ninjablocks"
         };
 
         this.key = key;
@@ -34,6 +34,10 @@ var TempoDBClient = exports.TempoDBClient =
         this.path = '/' + this.version;
         this.headers = headers;
         this.baseUrl = this.protocol + '://' + this.hostname + '/' + this.version;
+
+        // the agent which will be used for this instance to ensure keepalives are honored.
+        var Agent = require(this.protocol).Agent;
+        this.agent = new Agent({maxSockets: options.maxSockets || 50});
     }
 
 TempoDBClient.prototype._callApi = function(method, path, body, callback) {
@@ -42,7 +46,8 @@ TempoDBClient.prototype._callApi = function(method, path, body, callback) {
         url:  url.parse(this.baseUrl + path || this.baseUrl),
         method: method,
         headers: this.headers,
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        agent: this.agent
     };
 
     request(options, callback);
