@@ -5,18 +5,18 @@ var tempodb = new TempoDBClient('your-api-key', 'your-api-secret');
 var util = require('util');
 
 var series_key = 'your-custom-key',
-	series_start_date = new Date('2012-01-01'),
-	series_end_date = new Date('2012-01-02');
+  series_start_date = new Date('2012-01-01'),
+  series_end_date = new Date('2012-01-02');
 
 // read a date range
 var options = {
-	key: series_key,
-	interval: '1hour',
-	'function': 'mean'
+  key: series_key,
+  interval: '1hour',
+  'function': 'mean'
 }
 
 var start_time = new Date();
-tempodb.read(series_start_date, series_end_date, options, function(err, result){
-	console.log(result.statusCode + ': ' + util.inspect(JSON.parse(result.body)));
-	console.log('Completed in', new Date() - start_time, 'ms\n');
+tempodb.read(series_start_date, series_end_date, options, function (err, result) {
+  console.log(result.statusCode + ': ' + util.inspect(result.body));
+  console.log('Completed in', new Date() - start_time, 'ms\n');
 });

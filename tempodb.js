@@ -1,6 +1,7 @@
 var url = require('url');
 var request = require('request');
 var ID = 'TempoDB: ';
+var release = require('./package.json').version;
 
 var TempoDBClient = exports.TempoDBClient =
     function(key, secret, options) {
@@ -22,7 +23,7 @@ var TempoDBClient = exports.TempoDBClient =
         var headers = {
             'Host': hostname,
             'Authorization': auth,
-            'User-Agent': "tempodb-nodejs/0.2.1_ninjablocks"
+            'User-Agent': "tempodb-nodejs/" + release + "_ninjablocks"
         };
 
         this.key = key;
@@ -37,7 +38,7 @@ var TempoDBClient = exports.TempoDBClient =
 
         // the agent which will be used for this instance to ensure keepalives are honored.
         var Agent = require(this.protocol).Agent;
-        this.agent = new Agent({maxSockets: options.maxSockets || 50});
+        this.agent = new Agent({maxSockets: options.maxSockets || 25});
     }
 
 TempoDBClient.prototype._callApi = function(method, path, body, callback) {
@@ -47,7 +48,8 @@ TempoDBClient.prototype._callApi = function(method, path, body, callback) {
         method: method,
         headers: this.headers,
         body: JSON.stringify(body),
-        agent: this.agent
+        agent: this.agent,
+        json: true
     };
 
     request(options, callback);
@@ -230,20 +232,5 @@ var ISODateString = function(d) {
     if(typeof(d) == 'string') {
         return d;
     }
-
-    function pad(n) {
-        return n<10 ? '0' + n : n;
-    }
-
-/*
-    console.log('ISODateString', d.getUTCFullYear() + '-' +
-      pad(d.getUTCMonth() + 1) + '-' +
-      pad(d.getUTCDate()) + 'T' +
-      pad(d.getUTCHours()) + ':' +
-      pad(d.getUTCMinutes()) + ':' +
-      pad(d.getUTCSeconds()) + 'Z');
-    console.log('ISODateString', d.toISOString());
-*/
-
     return d.toISOString();
 };
