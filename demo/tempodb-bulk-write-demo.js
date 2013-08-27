@@ -1,7 +1,9 @@
 /* http://tempo-db.com/api/write-series/#bulk-write-multiple-series */
 
 var TempoDBClient = require('../tempodb').TempoDBClient;
-var tempodb = new TempoDBClient('your-api-key', 'your-api-secret');
+var creds = require('./creds.js')
+
+var tempodb = new TempoDBClient(creds.key, creds.secret);
 
 var start_time = new Date();
 

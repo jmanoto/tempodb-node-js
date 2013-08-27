@@ -1,6 +1,8 @@
 
 var TempoDBClient = require('../tempodb').TempoDBClient;
-var tempodb = new TempoDBClient('your-api-key', 'your-api-secret');
+var creds = require('./creds.js')
+var tempodb = new TempoDBClient(creds.key, creds.secret);
+
 var util = require('util');
 
 var series_key = 'your-custom-key'

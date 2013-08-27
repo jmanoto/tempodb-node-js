@@ -1,5 +1,6 @@
 var url = require('url');
 var request = require('request');
+var querystring = require("querystring")
 var ID = 'TempoDB: ';
 var release = require('./package.json').version;
 
@@ -75,7 +76,7 @@ TempoDBClient.prototype.get_series = function(options, callback) {
 
     */
     options = options || {};
-    var query_string = '?' + EncodeQueryData(options);
+    var query_string = '?' + querystring.stringify(options);
 
     return this._callApi('GET', '/series/' + query_string, null, callback);
 }
@@ -110,9 +111,9 @@ TempoDBClient.prototype.read = function(start, end, options, callback) {
 
     */
     options = options || {};
-    options.start = ISODateString(start);
-    options.end = ISODateString(end);
-    var query_string = '?' + EncodeQueryData(options);
+    options.start = this._toISODateString(start);
+    options.end = this._toISODateString(end);
+    var query_string = '?' + querystring.stringify(options);
 
     return this._callApi('GET', '/data/' + query_string, null, callback);
 };
@@ -125,9 +126,9 @@ TempoDBClient.prototype.read_id = function(series_id, start, end, options, callb
 
     */
     options = options || {};
-    options.start = ISODateString(start);
-    options.end = ISODateString(end);
-    var query_string = '?' + EncodeQueryData(options);
+    options.start = this._toISODateString(start);
+    options.end = this._toISODateString(end);
+    var query_string = '?' + querystring.stringify(options);
 
     return this._callApi('GET', '/series/id/' + series_id + '/data/' + query_string, null, callback);
 }
@@ -140,9 +141,9 @@ TempoDBClient.prototype.read_key = function(series_key, start, end, options, cal
 
     */
     options = options || {};
-    options.start = ISODateString(start);
-    options.end = ISODateString(end);
-    var query_string = '?' + EncodeQueryData(options);
+    options.start = this._toISODateString(start);
+    options.end = this._toISODateString(end);
+    var query_string = '?' + querystring.stringify(options);
 
     return this._callApi('GET', '/series/key/' + series_key + '/data/' + query_string, null, callback);
 }
@@ -157,7 +158,7 @@ TempoDBClient.prototype.write_key = function(series_key, data, callback) {
 
 TempoDBClient.prototype.write_bulk = function(ts, data, callback) {
     var body = {
-        t: ISODateString(ts),
+        t: this._toISODateString(ts),
         data: data
     }
 
@@ -174,7 +175,7 @@ TempoDBClient.prototype.increment_key = function(series_key, data, callback) {
 
 TempoDBClient.prototype.increment_bulk = function(ts, data, callback) {
     var body = {
-        t: ISODateString(ts),
+        t: this._toISODateString(ts),
         data: data
     }
 
@@ -183,51 +184,27 @@ TempoDBClient.prototype.increment_bulk = function(ts, data, callback) {
 
 TempoDBClient.prototype.delete_id = function(series_id, start, end, callback) {
   var options = {
-    start: ISODateString(start),
-    end:   ISODateString(end)
+    start: this._toISODateString(start),
+    end:   this._toISODateString(end)
   }
-  var query_string = '?' + EncodeQueryData(options);
+  var query_string = '?' + querystring.stringify(options);
 
   return this._callApi('DELETE', '/series/id/'+series_id+'/data/'+query_string, null, callback);
 }
 
 TempoDBClient.prototype.delete_key = function(series_key, start, end, callback) {
   var options = {
-    start: ISODateString(start),
-    end:   ISODateString(end)
+    start: this._toISODateString(start),
+    end:   this._toISODateString(end)
   }
 
-  var query_string = '?' + EncodeQueryData(options);
+  var query_string = '?' + querystring.stringify(options);
 
   return this._callApi('DELETE', '/series/key/'+series_key+'/data/'+query_string, null, callback);
 }
 
 
-var EncodeQueryData = function(data) {
-   var ret = [];
-   for (var key in data) {
-        var value = data[key];
-
-        if (value instanceof Array) {
-            for (var v in value){
-                ret.push(encodeURIComponent(key) + "=" + encodeURIComponent(value[v]));
-            }
-        }
-        else if (value instanceof Object) {
-            for (var v in value){
-                ret.push(encodeURIComponent(key) + "[" + encodeURIComponent(v) + "]=" + encodeURIComponent(value[v]));
-            }
-        }
-        else {
-            // plain value
-            ret.push(encodeURIComponent(key) + "=" + encodeURIComponent(value));
-        }
-    }
-
-   return ret.join("&");
-}
-
-var ISODateString = function(d) {
+TempoDBClient.prototype._toISODateString = function(d) {
     // If you pass a string for a date we will assume that it is already in ISO format
     if(typeof(d) == 'string') {
         return d;

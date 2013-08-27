@@ -1,8 +1,10 @@
 /* http://tempo-db.com/api/read-series/#read-series-by-key */
 
-var TempoDBClient = require('../tempodb').TempoDBClient;
-var tempodb = new TempoDBClient('your-api-key', 'your-api-secret');
 var util = require('util');
+var TempoDBClient = require('../tempodb').TempoDBClient;
+var creds = require('./creds.js')
+
+var tempodb = new TempoDBClient(creds.key, creds.secret);
 
 var series_key = 'your-custom-key',
   series_start_date = new Date('2012-01-01'),
