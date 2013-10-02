@@ -10,6 +10,7 @@
   ],
   "main": "tempodb",
   "dependencies": {
-    "request": "~2.21.0"
+    "request": "~2.21.0",
+    "forever-agent": "~0.5.0"
   }
 }
