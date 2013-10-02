@@ -5,7 +5,11 @@ var ID = 'TempoDB: ';
 var release = require('./package.json').version;
 var foreverAgent = require('forever-agent');
 
-console.log(foreverAgent)
+var SslAgent = foreverAgent.SSL;
+var sslAgent = new SslAgent({maxSockets: 25});
+
+var Agent = foreverAgent;
+var agent = new Agent({maxSockets: 25});
 
 var TempoDBClient = exports.TempoDBClient =
     function(key, secret, options) {
@@ -42,12 +46,10 @@ var TempoDBClient = exports.TempoDBClient =
 
         // the agent which will be used for this instance to ensure keep-alives are honored.
         if (this.protocol == 'https') {
-          var Agent = foreverAgent.SSL;
-          this.agent = new Agent({maxSockets: options.maxSockets || 25});
+          this.agent = sslAgent;
         }
         else {
-          var Agent = foreverAgent;
-          this.agent = new Agent({maxSockets: options.maxSockets || 25});
+          this.agent = agent;
         }
     }
 
