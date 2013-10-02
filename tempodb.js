@@ -55,6 +55,8 @@ var TempoDBClient = exports.TempoDBClient =
 
 TempoDBClient.prototype._callApi = function(method, path, body, callback) {
 
+    this.headers['connection'] = 'keep-alive';
+
     var options = {
         url:  url.parse(this.baseUrl + path || this.baseUrl),
         method: method,
