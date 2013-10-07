@@ -7,6 +7,10 @@ var ID = 'TempoDB: ';
 var release = require('./package.json').version;
 var foreverAgent = require('forever-agent');
 
+var HOST = 'api.tempo-db.com';
+var  VERSION = 'v1';
+var  SECURE = true;
+
 var SslAgent = foreverAgent.SSL;
 var sslAgent = new SslAgent({maxSockets: 25});
 
@@ -23,10 +27,6 @@ var TempoDBClient = exports.TempoDBClient =
      version (string)
      */
     options = options || {};
-
-    const HOST = 'api.tempo-db.com',
-      VERSION = 'v1',
-      SECURE = true;
 
     var hostname = options.hostname || HOST;
     var auth = 'Basic ' + new Buffer(key + ':' + secret).toString('base64');
