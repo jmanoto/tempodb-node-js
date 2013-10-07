@@ -5,17 +5,10 @@ var request = require('request');
 var querystring = require("querystring")
 var ID = 'TempoDB: ';
 var release = require('./package.json').version;
-var foreverAgent = require('forever-agent');
 
 var HOST = 'api.tempo-db.com';
 var  VERSION = 'v1';
 var  SECURE = true;
-
-var SslAgent = foreverAgent.SSL;
-var sslAgent = new SslAgent({maxSockets: 25});
-
-var Agent = foreverAgent;
-var agent = new Agent({maxSockets: 25});
 
 var TempoDBClient = exports.TempoDBClient =
   function (key, secret, options) {
@@ -46,14 +39,11 @@ var TempoDBClient = exports.TempoDBClient =
     this.headers = headers;
     this.baseUrl = this.protocol + '://' + this.hostname + '/' + this.version;
 
-    // the agent which will be used for this instance to ensure keep-alives are honored.
-    if (this.protocol == 'https') {
-      this.agent = sslAgent;
-    }
-    else {
-      this.agent = agent;
-    }
-  }
+    // the agent which will be used for this instance to ensure keepalives are honored.
+    var Agent = require(this.protocol).Agent;
+    this.agent = new Agent({maxSockets: options.maxSockets || 25});
+
+ }
 
 TempoDBClient.prototype._callApi = function (method, path, body, callback) {
 
@@ -67,6 +57,8 @@ TempoDBClient.prototype._callApi = function (method, path, body, callback) {
     agent: this.agent,
     json: true
   };
+
+  console.log('options', options);
 
   request(options, callback);
 }
