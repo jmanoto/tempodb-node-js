@@ -2,6 +2,10 @@
 
 var url = require('url');
 var request = require('request');
+
+var superagent = require('superagent');
+
+
 var querystring = require("querystring")
 var ID = 'TempoDB: ';
 var release = require('./package.json').version;
@@ -22,7 +26,9 @@ var TempoDBClient = exports.TempoDBClient =
     options = options || {};
 
     var hostname = options.hostname || HOST;
+    this.hostname = hostname
     var auth = 'Basic ' + new Buffer(key + ':' + secret).toString('base64');
+    this.auth = auth;
     var headers = {
       'Host': hostname,
       'Authorization': auth,
@@ -160,7 +166,13 @@ TempoDBClient.prototype.write_id = function (series_id, data, callback) {
 }
 
 TempoDBClient.prototype.write_key = function (series_key, data, callback) {
-  return this._callApi('POST', '/series/key/' + series_key + '/data/', data, callback);
+  superagent
+    .post(this.baseUrl + '/series/key/' + series_key + '/data/')
+    .set('Authorization', this.auth)
+    .set('Host', this.hostname)
+    .set('Accept', 'application/json')
+    .send(data)
+    .end(callback);
 }
 
 TempoDBClient.prototype.write_bulk = function (ts, data, callback) {
