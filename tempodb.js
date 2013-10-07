@@ -4,6 +4,7 @@ var url = require('url');
 var request = require('request');
 
 var superagent = require('superagent');
+var hyperquest = require('hyperquest');
 
 
 var querystring = require("querystring")
@@ -166,6 +167,7 @@ TempoDBClient.prototype.write_id = function (series_id, data, callback) {
 }
 
 TempoDBClient.prototype.write_key = function (series_key, data, callback) {
+/*
   superagent
     .post(this.baseUrl + '/series/key/' + series_key + '/data/')
     .set('Authorization', this.auth)
@@ -173,6 +175,17 @@ TempoDBClient.prototype.write_key = function (series_key, data, callback) {
     .set('Accept', 'application/json')
     .send(data)
     .end(callback);
+*/
+
+  var payload = JSON.stringify(data);
+  var req = hyperquest.post(this.baseUrl + '/series/key/' + series_key + '/data/', callback, {});
+  req.on('response', callback);
+  req.setHeader('Authorization', this.auth);
+  req.setHeader('Host', this.hostname);
+  req.setHeader('Content-Length', payload.length)
+  req.write(payload);
+  req.end();
+
 }
 
 TempoDBClient.prototype.write_bulk = function (ts, data, callback) {
