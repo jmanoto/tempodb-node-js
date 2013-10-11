@@ -11,8 +11,6 @@
   "main": "tempodb",
   "dependencies": {
     "request": "~2.21.0",
-    "hyperquest": "~0.1.8",
-    "through2": "~0.2.3",
-    "superagent": "~0.15.4"
+    "hyperquest": "~0.1.8"
   }
 }

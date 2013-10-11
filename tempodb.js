@@ -2,10 +2,7 @@
 
 var url = require('url');
 var request = require('request');
-
-var superagent = require('superagent');
 var hyperquest = require('hyperquest');
-
 
 var querystring = require("querystring")
 var ID = 'TempoDB: ';
@@ -64,8 +61,6 @@ TempoDBClient.prototype._callApi = function (method, path, body, callback) {
     agent: this.agent,
     json: true
   };
-
-  console.log('options', options);
 
   request(options, callback);
 }
@@ -167,19 +162,11 @@ TempoDBClient.prototype.write_id = function (series_id, data, callback) {
 }
 
 TempoDBClient.prototype.write_key = function (series_key, data, callback) {
-/*
-  superagent
-    .post(this.baseUrl + '/series/key/' + series_key + '/data/')
-    .set('Authorization', this.auth)
-    .set('Host', this.hostname)
-    .set('Accept', 'application/json')
-    .send(data)
-    .end(callback);
-*/
 
   var payload = JSON.stringify(data);
   var req = hyperquest.post(this.baseUrl + '/series/key/' + series_key + '/data/', callback, {});
-  req.on('response', callback);
+  req.on('error', callback);
+  req.on('response', callback.bind(null, null)); // prefix to empty the err
   req.setHeader('Authorization', this.auth);
   req.setHeader('Host', this.hostname);
   req.setHeader('Content-Length', payload.length)
