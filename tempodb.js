@@ -157,6 +157,24 @@ TempoDBClient.prototype.read_key = function (series_key, start, end, options, ca
   return this._callApi('GET', '/series/key/' + series_key + '/data/' + query_string, null, callback);
 }
 
+/**
+ * API to read RAW data!
+ */
+TempoDBClient.prototype.read_segment = function (series_key, start, end, options, callback) {
+  /*
+   options
+   interval (string)
+   function (string)
+
+   */
+  options = options || {};
+  options.start = this._toISODateString(start);
+  options.end = this._toISODateString(end);
+  var query_string = '?' + querystring.stringify(options);
+
+  return this._callApi('GET', '/series/key/' + series_key + '/segment/' + query_string, null, callback);
+}
+
 TempoDBClient.prototype.write_id = function (series_id, data, callback) {
   return this._callApi('POST', '/series/id/' + series_id + '/data/', data, callback);
 }
